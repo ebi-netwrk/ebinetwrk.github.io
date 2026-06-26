@@ -1,1 +1,27 @@
-<doc></doc>
+<div id="gate" style="font-family:Arial; text-align:center; margin-top:40px;">
+  <h2>Enter Access Code</h2>
+  <input type="password" id="code" style="font-size:16px; padding:4px;">
+  <button onclick="checkCode()" style="font-size:16px; padding:4px 12px;">Enter</button>
+  <p id="error" style="color:red;"></p>
+</div>
+
+<div id="radio" style="display:none; text-align:center; margin-top:40px;">
+  <h2>Now Playing</h2>
+  <!-- Put your stream player / link below -->
+  <audio controls>
+    <source src="YOUR_STREAM_URL_HERE" type="audio/mpeg">
+    Your browser does not support audio.
+  </audio>
+</div>
+
+<script type="text/javascript">
+function checkCode() {
+  var entered = document.getElementById("code").value;
+  if (entered === "letmein") {            // <-- change "letmein" to your code
+    document.getElementById("gate").style.display = "none";
+    document.getElementById("radio").style.display = "block";
+  } else {
+    document.getElementById("error").innerHTML = "Wrong code, try again.";
+  }
+}
+</script>
