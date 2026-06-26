@@ -1,27 +1,81 @@
-<div id="gate" style="font-family:Arial; text-align:center; margin-top:40px;">
-  <h2>Enter Access Code</h2>
-  <input type="password" id="code" style="font-size:16px; padding:4px;">
-  <button onclick="checkCode()" style="font-size:16px; padding:4px 12px;">Enter</button>
-  <p id="error" style="color:red;"></p>
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Ebinetwrk Radio</title>
+</head>
+
+<body background="files/geocities12.jpg" text="#FFFFFF" link="#00FFFF" vlink="#FF00FF">
+
+<p align="center"><font size="7" face="MS Sans Serif" color="#FFFFFF"><i>Ebinetwrk</i></font></p>
+
+<p align="center">
+<marquee behavior="scroll" direction="left" scrollamount="4">
+<font size="3" face="MS Sans Serif" color="#00FF00">*** LIVE DJ SETS STREAMING NOW MAYBE IF I DIDN'T FORGET MY GODDAMN AUDIO INPUT AGAIN!!! *** ENTER YOUR ACCESS CODE BELOW ***</font>
+</marquee>
+</p>
+
+<!-- ============ ACCESS GATE ============ -->
+<div id="gate">
+<table align="center" border="3" cellpadding="12" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
+  <tr>
+    <td align="center">
+      <font size="5" face="MS Sans Serif" color="#FFFF00"><b>~ MEMBERS ONLY ~</b></font><br>
+      <font size="2" face="MS Sans Serif" color="#FFFFFF">Enter the access code to tune in</font>
+      <p>
+      <input type="password" id="code" size="20" style="font-family:MS Sans Serif; font-size:14px;">
+      </p>
+      <p>
+      <input type="button" value="  ENTER  " onclick="checkCode()" style="font-family:MS Sans Serif; font-weight:bold;">
+      </p>
+      <font id="error" size="2" face="MS Sans Serif" color="#FF0000"></font>
+    </td>
+  </tr>
+</table>
 </div>
 
-<div id="radio" style="display:none; text-align:center; margin-top:40px;">
-  <h2>Now Playing</h2>
-  <!-- Put your stream player / link below -->
-  <audio controls>
-    <source src="YOUR_STREAM_URL_HERE" type="audio/mpeg">
-    Your browser does not support audio.
-  </audio>
+<!-- ============ RADIO (hidden until code entered) ============ -->
+<div id="radio" style="display:none;">
+<table align="center" border="3" cellpadding="12" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
+  <tr>
+    <td align="center">
+      <font size="5" face="MS Sans Serif" color="#00FF00"><b>>> NOW STREAMING <<</b></font>
+      <p>
+      <!-- Replace YOUR_STREAM_URL_HERE with your real stream address -->
+      <embed src="http://ebinetwrk.ddns.net:8230/stream" autostart="true" loop="true" width="300" height="60">
+      </p>
+      <font size="2" face="MS Sans Serif" color="#FFFFFF">
+      Streamed live from the Ebinetwrk basement.<br>
+      <span style="position: absolute; left: 631; top: 240"><img border="0" src="../weinerdance.gif" width="58" height="80"></span>
+      Do not refresh or you will lose the stream!
+      </font>
+    </td>
+  </tr>
+</table>
 </div>
+
+<p align="center">
+<font size="1" face="MS Sans Serif" color="#FFFFFF">
+Best viewed in Internet Explorer 5 at 800x600<br>
+&copy; 2026 Ebinetwrk
+</font>
+</p>
 
 <script type="text/javascript">
 function checkCode() {
   var entered = document.getElementById("code").value;
-  if (entered === "letmein") {            // <-- change "letmein" to your code
+  if (entered == "letmein") {        // <-- change "1337" to your code
     document.getElementById("gate").style.display = "none";
     document.getElementById("radio").style.display = "block";
   } else {
-    document.getElementById("error").innerHTML = "Wrong code, try again.";
+    document.getElementById("error").innerHTML = "*** WRONG CODE! Try again ***";
   }
 }
 </script>
+
+</body>
+
+</html>
