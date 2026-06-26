@@ -2,17 +2,18 @@
 <head>
 <meta http-equiv="Content-Language" content="en-us">
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
-<meta name="ProgId" content="FrontPage.Editor.Document">
 <title>Ebinetwrk Radio</title>
 </head>
 <body background="files/geocities12.jpg" text="#FFFFFF" link="#00FFFF" vlink="#FF00FF">
+
 <p align="center"><font size="7" face="MS Sans Serif" color="#FFFFFF"><i>Ebinetwrk</i></font></p>
+
 <p align="center">
 <marquee behavior="scroll" direction="left" scrollamount="4">
-<font size="3" face="MS Sans Serif" color="#00FF00">*** LIVE DJ SETS STREAMING NOW MAYBE IF I DIDN'T FORGET MY GODDAMN AUDIO INPUT AGAIN!!! *** ENTER YOUR ACCESS CODE BELOW ***</font>
+<font size="3" face="MS Sans Serif" color="#00FF00">*** LIVE DJ SETS STREAMING NOW *** ENTER YOUR ACCESS CODE BELOW ***</font>
 </marquee>
 </p>
+
 <!-- ============ ACCESS GATE ============ -->
 <div id="gate">
 <table align="center" border="3" cellpadding="12" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
@@ -31,49 +32,141 @@
   </tr>
 </table>
 </div>
+
 <!-- ============ RADIO (hidden until code entered) ============ -->
 <div id="radio" style="display:none;">
-<table align="center" border="3" cellpadding="12" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
+<table align="center" border="3" cellpadding="10" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
   <tr>
     <td align="center">
-      <font size="5" face="MS Sans Serif" color="#00FF00"><b>>> NOW STREAMING <<</b></font>
-      <p>
-      <!-- Replace YOUR_STREAM_URL_HERE with your real stream address -->
-      <object classid="clsid:6BF52A52-394A-11d3-B153-00C04F79FAA6"
-              width="300" height="64">
-        <param name="url" value="http://ebinetwrk.ddns.net:8230/stream">
-        <param name="autoStart" value="true">
-        <param name="uiMode" value="full">
-        <embed src="http://ebinetwrk.ddns.net:8230/stream"
-               type="application/x-mplayer2"
-               width="300" height="64" autostart="true"></embed>
-      </object>
+      <font size="5" face="MS Sans Serif" color="#00FF00"><b>&gt;&gt; NOW STREAMING &lt;&lt;</b></font>
+
+      <!-- ===== custom player skin ===== -->
+      <div style="margin:10px auto; width:340px; background:#000000; border:2px inset #C0C0C0; padding:8px;">
+
+        <!-- dB meter (canvas) -->
+        <div style="background:#101010; border:2px inset #808080; padding:4px;">
+          <canvas id="meter" width="320" height="40" style="display:block; image-rendering:pixelated;"></canvas>
+        </div>
+        <font size="1" face="MS Sans Serif" color="#00FF00" id="dbreadout">-&infin; dB</font>
+
+        <!-- transport buttons -->
+        <p style="margin:8px 0;">
+          <input type="button" id="playbtn" value=" &#9658; PLAY " onclick="playStream()"
+                 style="font-family:MS Sans Serif; font-weight:bold;">
+          <input type="button" id="stopbtn" value=" &#9632; STOP " onclick="stopStream()"
+                 style="font-family:MS Sans Serif; font-weight:bold;">
+        </p>
+
+        <!-- volume -->
+        <font size="1" face="MS Sans Serif" color="#FFFFFF">VOLUME</font><br>
+        <input type="range" id="vol" min="0" max="100" value="80"
+               oninput="setVol(this.value)" style="width:240px;">
+        <br><font size="1" face="MS Sans Serif" color="#FFFFFF" id="volreadout">80%</font>
+      </div>
+
+      <audio id="player" crossorigin="anonymous">
+        <source src="http://YOUR_URL_HERE/stream" type="audio/mpeg">
+      </audio>
+
       <p>
       <font size="2" face="MS Sans Serif" color="#FFFFFF">
       Streamed live from the Ebinetwrk basement.<br>
-      <span style="position: absolute; left: 631; top: 240"><img border="0" src="files/weinerdance.gif" width="58" height="80"></span>
+      <img border="0" src="files/weinerdance.gif" width="58" height="80"><br>
       Do not refresh or you will lose the stream!
       </font>
     </td>
   </tr>
 </table>
 </div>
+
 <p align="center">
 <font size="1" face="MS Sans Serif" color="#FFFFFF">
 Best viewed in Internet Explorer 5 at 800x600<br>
 &copy; 2026 Ebinetwrk
 </font>
 </p>
+
 <script type="text/javascript">
 function checkCode() {
   var entered = document.getElementById("code").value;
-  if (entered == "letmein") {        // <-- change "1337" to your code
+  if (entered == "letmein") {          // <-- change "letmein" to your code
     document.getElementById("gate").style.display = "none";
     document.getElementById("radio").style.display = "block";
   } else {
     document.getElementById("error").innerHTML = "*** WRONG CODE! Try again ***";
   }
 }
+
+var audio = null, ctx = null, analyser = null, data = null, raf = null;
+var canvas, cctx;
+
+function setupAudio() {
+  if (ctx) return;                          // only build the graph once
+  audio = document.getElementById("player");
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  var src = ctx.createMediaElementSource(audio);
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 1024;
+  data = new Uint8Array(analyser.fftSize);
+  src.connect(analyser);
+  analyser.connect(ctx.destination);        // so we still hear it
+  canvas = document.getElementById("meter");
+  cctx = canvas.getContext("2d");
+  drawMeter();
+}
+
+function playStream() {
+  setupAudio();
+  if (ctx.state === "suspended") ctx.resume();
+  // reload the source so it grabs the LIVE point, not a stale buffer
+  audio.load();
+  audio.play();
+}
+
+function stopStream() {
+  if (audio) { audio.pause(); }
+}
+
+function setVol(v) {
+  if (audio) audio.volume = v / 100;
+  document.getElementById("volreadout").innerHTML = v + "%";
+}
+
+function drawMeter() {
+  raf = requestAnimationFrame(drawMeter);
+  if (!analyser) return;
+  analyser.getByteTimeDomainData(data);
+
+  // compute RMS -> dB
+  var sum = 0;
+  for (var i = 0; i < data.length; i++) {
+    var s = (data[i] - 128) / 128;
+    sum += s * s;
+  }
+  var rms = Math.sqrt(sum / data.length);
+  var db = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+
+  // readout
+  var ro = document.getElementById("dbreadout");
+  ro.innerHTML = (db === -Infinity ? "-&infin;" : db.toFixed(1)) + " dB";
+
+  // draw bar: map -60dB..0dB to 0..width
+  cctx.clearRect(0, 0, canvas.width, canvas.height);
+  var pct = Math.max(0, Math.min(1, (db + 60) / 60));
+  var w = canvas.width * pct;
+
+  // green -> yellow -> red segments, LED style
+  var seg = 6, gap = 2, x = 0;
+  while (x < w) {
+    var frac = x / canvas.width;
+    if (frac < 0.6) cctx.fillStyle = "#00FF00";
+    else if (frac < 0.85) cctx.fillStyle = "#FFFF00";
+    else cctx.fillStyle = "#FF0000";
+    cctx.fillRect(x, 4, seg, canvas.height - 8);
+    x += seg + gap;
+  }
+}
 </script>
+
 </body>
 </html>
