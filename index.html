@@ -1,172 +1,400 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Language" content="en-us">
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ebinetwrk Radio</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* 2015 Roblox palette */
+    --rbx-blue:#0084c9;         /* 2015 blue top bar */
+    --rbx-blue-d:#006ba8;
+    --rbx-page:#e3e3e3;         /* light grey page */
+    --rbx-card:#ffffff;
+    --rbx-line:#c8c8c8;
+    --rbx-text:#3b3b3b;
+    --rbx-sub:#7a7a7a;
+    --rbx-red:#e2241a;          /* signature roblox red */
+    --rbx-green:#4caf21;        /* play-button green */
+    --rbx-green-d:#3d9119;
+    --rbx-accent:#00a2ff;       /* link blue */
+    --rbx-gold:#f2c200;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Source Sans Pro',Helvetica,Arial,sans-serif;
+    background:var(--rbx-page);
+    color:var(--rbx-text);
+    min-height:100vh;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    background:linear-gradient(var(--rbx-blue),var(--rbx-blue-d));
+    height:52px;
+    display:flex;align-items:center;
+    padding:0 18px;
+    box-shadow:0 2px 0 rgba(0,0,0,.18);
+  }
+  .topbar .logo{
+    font-weight:900;font-size:22px;letter-spacing:-.5px;color:#fff;
+    text-shadow:0 1px 1px rgba(0,0,0,.25);
+  }
+  .topbar .logo span{color:var(--rbx-red);}
+  .topbar .tag{
+    margin-left:14px;color:#cfe8f7;font-size:13px;font-weight:600;
+    border-left:1px solid rgba(255,255,255,.35);padding-left:14px;
+  }
+  .topbar .live{
+    margin-left:auto;display:flex;align-items:center;gap:7px;
+    color:#fff;font-weight:700;font-size:13px;
+  }
+  .dot{
+    width:10px;height:10px;border-radius:50%;background:var(--rbx-red);
+    box-shadow:0 0 0 0 rgba(226,36,26,.6);animation:pulse 1.4s infinite;
+  }
+  .dot.off{background:#6b7785;animation:none;}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(226,36,26,.6);}
+    70%{box-shadow:0 0 0 7px rgba(226,36,26,0);}
+    100%{box-shadow:0 0 0 0 rgba(226,36,26,0);}
+  }
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:720px;margin:26px auto;padding:0 16px;}
+
+  .card{
+    background:var(--rbx-card);
+    border:1px solid var(--rbx-line);
+    border-radius:8px;
+    box-shadow:0 1px 2px rgba(0,0,0,.08);
+    margin-bottom:18px;
+    overflow:hidden;
+  }
+  .card-head{
+    background:linear-gradient(#f7f7f7,#ededed);
+    border-bottom:1px solid var(--rbx-line);
+    padding:12px 18px;font-weight:700;font-size:16px;color:#444;
+    display:flex;align-items:center;gap:9px;
+  }
+  .card-body{padding:20px 18px;}
+
+  /* ---------- the "game page" hero for the stream ---------- */
+  .stage{
+    display:flex;gap:20px;align-items:stretch;flex-wrap:wrap;
+  }
+  .thumb{
+    width:200px;height:200px;flex:0 0 200px;border-radius:8px;
+    background:
+      radial-gradient(circle at 30% 25%, #3a4658 0%, #1f2937 70%);
+    border:1px solid #0d1420;
+    position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .thumb .equ{display:flex;gap:5px;align-items:flex-end;height:90px;}
+  .thumb .equ i{
+    width:9px;background:linear-gradient(var(--rbx-green),#7CFF3F);
+    border-radius:2px 2px 0 0;height:20%;
+    box-shadow:0 0 6px rgba(124,255,63,.4);
+  }
+  .thumb .badge{
+    position:absolute;top:8px;left:8px;background:var(--rbx-red);
+    color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;
+    padding:3px 8px;border-radius:4px;
+  }
+  .info{flex:1 1 260px;min-width:240px;display:flex;flex-direction:column;}
+  .info h1{
+    margin:0 0 2px;font-size:26px;font-weight:900;color:#2b2b2b;letter-spacing:-.4px;
+  }
+  .info .by{color:var(--rbx-sub);font-size:14px;font-weight:600;margin-bottom:14px;}
+  .info .by b{color:var(--rbx-accent);}
+
+  /* ---------- dB meter as a roblox-style bar ---------- */
+  .meter-label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:12px;font-weight:700;color:var(--rbx-sub);
+    text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;
+  }
+  .meter-label .val{color:var(--rbx-green-d);font-size:13px;font-variant-numeric:tabular-nums;}
+  .meter-track{
+    height:22px;background:#dfe3e8;border:1px solid #b9c0c8;border-radius:5px;
+    overflow:hidden;position:relative;
+  }
+  .meter-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--rbx-green) 0%,var(--rbx-green) 60%,var(--rbx-gold) 80%,var(--rbx-red) 100%);
+    background-size:166.66% 100%;background-position:left;
+    transition:width .05s linear;
+  }
+  .meter-ticks{position:absolute;inset:0;display:flex;}
+  .meter-ticks i{flex:1;border-right:1px solid rgba(255,255,255,.45);}
+  .meter-ticks i:last-child{border:none;}
+
+  /* ---------- buttons ---------- */
+  .controls{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .btn{
+    font-family:inherit;font-weight:700;font-size:16px;color:#fff;
+    border:none;border-radius:6px;padding:11px 22px;cursor:pointer;
+    box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .05s, filter .15s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.18);}
+  .btn-play{background:linear-gradient(var(--rbx-green),var(--rbx-green-d));}
+  .btn-play:hover{filter:brightness(1.06);}
+  .btn-stop{background:linear-gradient(#7d8893,#5e6873);}
+  .btn-stop:hover{filter:brightness(1.06);}
+  .btn[disabled]{opacity:.5;cursor:default;filter:none;}
+  .btn .tri{width:0;height:0;border-left:13px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;}
+  .btn .sq{width:13px;height:13px;background:#fff;border-radius:2px;}
+
+  /* ---------- volume ---------- */
+  .vol{margin-top:18px;display:flex;align-items:center;gap:12px;}
+  .vol label{font-size:12px;font-weight:700;color:var(--rbx-sub);text-transform:uppercase;letter-spacing:.6px;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;height:8px;border-radius:5px;
+    background:#d3d8de;border:1px solid #b9c0c8;flex:1;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    background:linear-gradient(#fff,#dde2e8);border:1px solid #9aa3ad;cursor:pointer;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background:linear-gradient(#fff,#dde2e8);border:1px solid #9aa3ad;cursor:pointer;
+  }
+  .vol .pct{font-size:13px;font-weight:700;color:#555;width:42px;text-align:right;font-variant-numeric:tabular-nums;}
+
+  .status{
+    margin-top:16px;font-size:13px;color:var(--rbx-sub);font-weight:600;
+    background:#f5f6f8;border:1px solid #e3e6ea;border-radius:5px;padding:9px 12px;
+  }
+  .status b{color:var(--rbx-green-d);}
+  .status.err b{color:var(--rbx-red);}
+
+  /* ---------- about strip ---------- */
+  .meta{display:flex;gap:0;flex-wrap:wrap;}
+  .meta .cell{
+    flex:1 1 33%;padding:12px 10px;text-align:center;border-right:1px solid #eee;
+  }
+  .meta .cell:last-child{border:none;}
+  .meta .k{font-size:11px;font-weight:700;color:var(--rbx-sub);text-transform:uppercase;letter-spacing:.5px;}
+  .meta .v{font-size:18px;font-weight:800;color:#3b3b3b;margin-top:2px;}
+
+  .foot{text-align:center;color:#9a9a9a;font-size:12px;font-weight:600;margin:24px 0 40px;}
+  .foot span{color:var(--rbx-red);}
+
+  /* ---------- access gate modal ---------- */
+  .gate-bg{
+    position:fixed;inset:0;background:rgba(20,26,33,.78);
+    display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .gate{
+    background:#fff;border-radius:10px;width:100%;max-width:380px;overflow:hidden;
+    box-shadow:0 14px 40px rgba(0,0,0,.4);
+  }
+  .gate-head{
+    background:var(--rbx-red);color:#fff;padding:16px 20px;font-weight:900;font-size:19px;
+    display:flex;align-items:center;gap:9px;
+  }
+  .gate-body{padding:22px 20px;}
+  .gate-body p{margin:0 0 14px;color:var(--rbx-sub);font-size:14px;font-weight:600;}
+  .gate-body input[type=password]{
+    width:100%;padding:12px 14px;font-family:inherit;font-size:16px;font-weight:600;
+    border:2px solid #d3d8de;border-radius:6px;outline:none;
+  }
+  .gate-body input[type=password]:focus{border-color:var(--rbx-accent);}
+  .gate-err{color:var(--rbx-red);font-weight:700;font-size:13px;margin-top:10px;min-height:18px;}
+  .btn-enter{
+    width:100%;margin-top:14px;justify-content:center;
+    background:linear-gradient(var(--rbx-green),var(--rbx-green-d));
+  }
+  .locked .wrap{filter:blur(4px);pointer-events:none;user-select:none;}
+
+  @media(max-width:520px){
+    .info h1{font-size:22px;}
+    .thumb{flex-basis:100%;width:100%;}
+  }
+</style>
 </head>
-<body background="files/geocities12.jpg" text="#FFFFFF" link="#00FFFF" vlink="#FF00FF">
+<body class="locked">
 
-<p align="center"><font size="7" face="MS Sans Serif" color="#FFFFFF"><i>Ebinetwrk</i></font></p>
+  <!-- ============ TOP BAR ============ -->
+  <div class="topbar">
+    <div class="logo">Ebi<span>net</span>wrk</div>
+    <div class="tag">Radio</div>
+    <div class="live"><span class="dot off" id="livedot"></span><span id="livetxt">OFFLINE</span></div>
+  </div>
 
-<p align="center">
-<marquee behavior="scroll" direction="left" scrollamount="4">
-<font size="3" face="MS Sans Serif" color="#00FF00">*** LIVE DJ SETS STREAMING NOW *** ENTER YOUR ACCESS CODE BELOW ***</font>
-</marquee>
-</p>
+  <div class="wrap">
 
-<!-- ============ ACCESS GATE ============ -->
-<div id="gate">
-<table align="center" border="3" cellpadding="12" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
-  <tr>
-    <td align="center">
-      <font size="5" face="MS Sans Serif" color="#FFFF00"><b>~ MEMBERS ONLY ~</b></font><br>
-      <font size="2" face="MS Sans Serif" color="#FFFFFF">Enter the access code to tune in</font>
-      <p>
-      <input type="password" id="code" size="20" style="font-family:MS Sans Serif; font-size:14px;">
-      </p>
-      <p>
-      <input type="button" value="  ENTER  " onclick="checkCode()" style="font-family:MS Sans Serif; font-weight:bold;">
-      </p>
-      <font id="error" size="2" face="MS Sans Serif" color="#FF0000"></font>
-    </td>
-  </tr>
-</table>
-</div>
+    <!-- ============ STREAM CARD ============ -->
+    <div class="card">
+      <div class="card-head">Now Playing</div>
+      <div class="card-body">
+        <div class="stage">
+          <div class="thumb">
+            <span class="badge">LIVE</span>
+            <div class="equ" id="equ">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <div class="info">
+            <h1>DJ Set Stream</h1>
+            <div class="by">by <b>Ebinetwrk</b> · streamed live from the basement</div>
 
-<!-- ============ RADIO (hidden until code entered) ============ -->
-<div id="radio" style="display:none;">
-<table align="center" border="3" cellpadding="10" cellspacing="0" bordercolor="#C0C0C0" bgcolor="#000080" width="420">
-  <tr>
-    <td align="center">
-      <font size="5" face="MS Sans Serif" color="#00FF00"><b>&gt;&gt; NOW STREAMING &lt;&lt;</b></font>
+            <!-- dB meter as roblox bar -->
+            <div class="meter-label"><span>Output Level</span><span class="val" id="dbreadout">-&infin; dB</span></div>
+            <div class="meter-track">
+              <div class="meter-fill" id="meterfill"></div>
+              <div class="meter-ticks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
 
-      <!-- ===== custom player skin ===== -->
-      <div style="margin:10px auto; width:340px; background:#000000; border:2px inset #C0C0C0; padding:8px;">
+            <div class="controls">
+              <button class="btn btn-play" id="playbtn" onclick="playStream()"><span class="tri"></span>Play</button>
+              <button class="btn btn-stop" id="stopbtn" onclick="stopStream()" disabled><span class="sq"></span>Stop</button>
+            </div>
 
-        <!-- dB meter (canvas) -->
-        <div style="background:#101010; border:2px inset #808080; padding:4px;">
-          <canvas id="meter" width="320" height="40" style="display:block; image-rendering:pixelated;"></canvas>
+            <div class="vol">
+              <label>Vol</label>
+              <input type="range" id="vol" min="0" max="100" value="80" oninput="setVol(this.value)">
+              <span class="pct" id="volreadout">80%</span>
+            </div>
+
+            <div class="status" id="status">Press <b>Play</b> to connect to the stream.</div>
+          </div>
         </div>
-        <font size="1" face="MS Sans Serif" color="#00FF00" id="dbreadout">-&infin; dB</font>
-
-        <!-- transport buttons -->
-        <p style="margin:8px 0;">
-          <input type="button" id="playbtn" value=" &#9658; PLAY " onclick="playStream()"
-                 style="font-family:MS Sans Serif; font-weight:bold;">
-          <input type="button" id="stopbtn" value=" &#9632; STOP " onclick="stopStream()"
-                 style="font-family:MS Sans Serif; font-weight:bold;">
-        </p>
-
-        <!-- volume -->
-        <font size="1" face="MS Sans Serif" color="#FFFFFF">VOLUME</font><br>
-        <input type="range" id="vol" min="0" max="100" value="80"
-               oninput="setVol(this.value)" style="width:240px;">
-        <br><font size="1" face="MS Sans Serif" color="#FFFFFF" id="volreadout">80%</font>
       </div>
+    </div>
 
-      <audio id="player" crossorigin="anonymous">
-        <source src="http://ebinetwrk.ddns.net:443/stream" type="audio/mpeg">
-      </audio>
+    <!-- ============ ABOUT STRIP ============ -->
+    <div class="card">
+      <div class="card-head">Stream Info</div>
+      <div class="meta">
+        <div class="cell"><div class="k">Format</div><div class="v">MP3</div></div>
+        <div class="cell"><div class="k">Source</div><div class="v">Live</div></div>
+        <div class="cell"><div class="k">Status</div><div class="v" id="metastatus">—</div></div>
+      </div>
+    </div>
 
-      <p>
-      <font size="2" face="MS Sans Serif" color="#FFFFFF">
-      Streamed live from the Ebinetwrk basement.<br>
-      <img border="0" src="files/weinerdance.gif" width="58" height="80"><br>
-      Do not refresh or you will lose the stream!
-      </font>
-    </td>
-  </tr>
-</table>
-</div>
+    <div class="foot">Made with <span>&hearts;</span> in the basement · &copy; 2026 Ebinetwrk</div>
+  </div>
 
-<p align="center">
-<font size="1" face="MS Sans Serif" color="#FFFFFF">
-Best viewed in Internet Explorer 5 at 800x600<br>
-&copy; 2026 Ebinetwrk
-</font>
-</p>
+  <!-- ============ ACCESS GATE ============ -->
+  <div class="gate-bg" id="gatebg">
+    <div class="gate">
+      <div class="gate-head">Whitelist Only</div>
+      <div class="gate-body">
+        <p>Enter the access code to tune in to the live stream.</p>
+        <input type="password" id="code" placeholder="Access code" onkeydown="if(event.key==='Enter')checkCode()">
+        <div class="gate-err" id="gateerr"></div>
+        <button class="btn btn-enter" onclick="checkCode()">Enter</button>
+      </div>
+    </div>
+  </div>
 
-<script type="text/javascript">
-function checkCode() {
-  var entered = document.getElementById("code").value;
-  if (entered == "letmein") {          // <-- change "letmein" to your code
-    document.getElementById("gate").style.display = "none";
-    document.getElementById("radio").style.display = "block";
-  } else {
-    document.getElementById("error").innerHTML = "*** WRONG CODE! Try again ***";
+<script>
+  /* =========================================================
+     CONFIG — change these two things
+     ========================================================= */
+  var STREAM_URL = "https://radio.friedchuhai.xyz/stream";  // <-- swap to https://radio.friedchuhai.xyz/stream when the tunnel is live
+  var ACCESS_CODE = "letmein";                                // <-- change to your code
+  /* ========================================================= */
+
+  /* ---- access gate ---- */
+  function checkCode(){
+    var v = document.getElementById("code").value;
+    if(v === ACCESS_CODE){
+      document.getElementById("gatebg").style.display = "none";
+      document.body.classList.remove("locked");
+    }else{
+      document.getElementById("gateerr").textContent = "Wrong code — try again.";
+      document.getElementById("code").value = "";
+    }
   }
-}
 
-var audio = null, ctx = null, analyser = null, data = null, raf = null;
-var canvas, cctx;
+  /* ---- player + meter ---- */
+  var audio=null, ctx=null, analyser=null, data=null;
+  var fill=document.getElementById("meterfill");
+  var dbReadout=document.getElementById("dbreadout");
+  var equBars=document.querySelectorAll("#equ i");
 
-function setupAudio() {
-  if (ctx) return;                          // only build the graph once
-  audio = document.getElementById("player");
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
-  var src = ctx.createMediaElementSource(audio);
-  analyser = ctx.createAnalyser();
-  analyser.fftSize = 1024;
-  data = new Uint8Array(analyser.fftSize);
-  src.connect(analyser);
-  analyser.connect(ctx.destination);        // so we still hear it
-  canvas = document.getElementById("meter");
-  cctx = canvas.getContext("2d");
-  drawMeter();
-}
-
-function playStream() {
-  setupAudio();
-  if (ctx.state === "suspended") ctx.resume();
-  // reload the source so it grabs the LIVE point, not a stale buffer
-  audio.load();
-  audio.play();
-}
-
-function stopStream() {
-  if (audio) { audio.pause(); }
-}
-
-function setVol(v) {
-  if (audio) audio.volume = v / 100;
-  document.getElementById("volreadout").innerHTML = v + "%";
-}
-
-function drawMeter() {
-  raf = requestAnimationFrame(drawMeter);
-  if (!analyser) return;
-  analyser.getByteTimeDomainData(data);
-
-  // compute RMS -> dB
-  var sum = 0;
-  for (var i = 0; i < data.length; i++) {
-    var s = (data[i] - 128) / 128;
-    sum += s * s;
+  function setStatus(msg, isErr){
+    var s=document.getElementById("status");
+    s.innerHTML=msg; s.className="status"+(isErr?" err":"");
   }
-  var rms = Math.sqrt(sum / data.length);
-  var db = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
-
-  // readout
-  var ro = document.getElementById("dbreadout");
-  ro.innerHTML = (db === -Infinity ? "-&infin;" : db.toFixed(1)) + " dB";
-
-  // draw bar: map -60dB..0dB to 0..width
-  cctx.clearRect(0, 0, canvas.width, canvas.height);
-  var pct = Math.max(0, Math.min(1, (db + 60) / 60));
-  var w = canvas.width * pct;
-
-  // green -> yellow -> red segments, LED style
-  var seg = 6, gap = 2, x = 0;
-  while (x < w) {
-    var frac = x / canvas.width;
-    if (frac < 0.6) cctx.fillStyle = "#00FF00";
-    else if (frac < 0.85) cctx.fillStyle = "#FFFF00";
-    else cctx.fillStyle = "#FF0000";
-    cctx.fillRect(x, 4, seg, canvas.height - 8);
-    x += seg + gap;
+  function setLive(on){
+    document.getElementById("livedot").className="dot"+(on?"":" off");
+    document.getElementById("livetxt").textContent=on?"LIVE":"OFFLINE";
+    document.getElementById("metastatus").textContent=on?"On Air":"Off";
   }
-}
+
+  function setupAudio(){
+    if(ctx) return;
+    audio=new Audio();
+    audio.crossOrigin="anonymous";   // needed for the meter (requires CORS header on Icecast)
+    audio.src=STREAM_URL;
+    audio.addEventListener("playing",function(){ setStatus("Connected — <b>now streaming</b>."); setLive(true); });
+    audio.addEventListener("waiting",function(){ setStatus("Buffering…"); });
+    audio.addEventListener("error",function(){ setStatus("Could not reach the stream. Is the broadcast live?",true); setLive(false); });
+    audio.addEventListener("pause",function(){ setLive(false); });
+    try{
+      ctx=new (window.AudioContext||window.webkitAudioContext)();
+      var src=ctx.createMediaElementSource(audio);
+      analyser=ctx.createAnalyser();
+      analyser.fftSize=1024;
+      data=new Uint8Array(analyser.fftSize);
+      src.connect(analyser);
+      analyser.connect(ctx.destination);
+    }catch(e){ /* meter unavailable, audio still plays */ }
+    draw();
+  }
+
+  function playStream(){
+    setupAudio();
+    if(ctx && ctx.state==="suspended") ctx.resume();
+    audio.play().then(function(){
+      document.getElementById("playbtn").disabled=true;
+      document.getElementById("stopbtn").disabled=false;
+    }).catch(function(){
+      setStatus("Browser blocked playback — press Play again.",true);
+    });
+    setStatus("Connecting…");
+  }
+  function stopStream(){
+    if(audio){ audio.pause(); audio.src=audio.src; } // reset so next play grabs live point
+    document.getElementById("playbtn").disabled=false;
+    document.getElementById("stopbtn").disabled=true;
+    setStatus("Stopped. Press <b>Play</b> to reconnect.");
+    setLive(false);
+  }
+  function setVol(v){
+    if(audio) audio.volume=v/100;
+    document.getElementById("volreadout").textContent=v+"%";
+  }
+
+  function draw(){
+    requestAnimationFrame(draw);
+    var db=-Infinity, pct=0;
+    if(analyser){
+      analyser.getByteTimeDomainData(data);
+      var sum=0;
+      for(var i=0;i<data.length;i++){var s=(data[i]-128)/128;sum+=s*s;}
+      var rms=Math.sqrt(sum/data.length);
+      db = rms>0 ? 20*Math.log10(rms) : -Infinity;
+      pct = Math.max(0,Math.min(1,(db+60)/60));
+    }
+    dbReadout.innerHTML = (db===-Infinity?"-&infin;":db.toFixed(1)) + " dB";
+    fill.style.width = (pct*100).toFixed(1)+"%";
+    // equalizer bars in the thumbnail react too
+    for(var b=0;b<equBars.length;b++){
+      var jitter = pct>0 ? (pct*100*(0.4+Math.random()*0.6)) : 18;
+      equBars[b].style.height = Math.max(12,Math.min(100,jitter))+"%";
+    }
+  }
 </script>
-
 </body>
 </html>
