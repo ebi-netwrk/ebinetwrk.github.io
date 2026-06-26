@@ -20,6 +20,28 @@
     --rbx-green-d:#3d9119;
     --rbx-accent:#00a2ff;       /* link blue */
     --rbx-gold:#f2c200;
+
+    /* graph theming (light mode defaults) */
+    --graph-bg:#1c1c1c;         /* neutral dark box, no blue */
+    --graph-ink:#ffffff;        /* white bars + waveform */
+    --card-head-bg:linear-gradient(#f7f7f7,#ededed);
+    --meta-line:#eee;
+    --status-bg:#f5f6f8;
+    --status-line:#e3e6ea;
+  }
+
+  body.dark{
+    --rbx-page:#1b1b1b;
+    --rbx-card:#2b2b2b;
+    --rbx-line:#3b3b3b;
+    --rbx-text:#e6e9ec;
+    --rbx-sub:#9aa3ad;
+    --graph-bg:#ffffff;         /* inverted: white box */
+    --graph-ink:#111111;        /* inverted: black bars + waveform */
+    --card-head-bg:linear-gradient(#2e353d,#272d34);
+    --meta-line:#39414a;
+    --status-bg:#1f242a;
+    --status-line:#39414a;
   }
 
   *{box-sizing:border-box;}
@@ -29,6 +51,7 @@
     background:var(--rbx-page);
     color:var(--rbx-text);
     min-height:100vh;
+    transition:background .2s, color .2s;
   }
 
   /* ---------- top bar ---------- */
@@ -52,6 +75,15 @@
     margin-left:auto;display:flex;align-items:center;gap:7px;
     color:#fff;font-weight:700;font-size:13px;
   }
+  .theme-btn{
+    margin-left:auto;
+    font-family:inherit;font-size:13px;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+    border-radius:6px;padding:6px 12px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;transition:background .15s;
+  }
+  .theme-btn:hover{background:rgba(255,255,255,.28);}
+  .theme-btn + .live{margin-left:14px;}
   .dot{
     width:10px;height:10px;border-radius:50%;background:var(--rbx-red);
     box-shadow:0 0 0 0 rgba(226,36,26,.6);animation:pulse 1.4s infinite;
@@ -75,9 +107,9 @@
     overflow:hidden;
   }
   .card-head{
-    background:linear-gradient(#f7f7f7,#ededed);
+    background:var(--card-head-bg);
     border-bottom:1px solid var(--rbx-line);
-    padding:12px 18px;font-weight:700;font-size:16px;color:#444;
+    padding:12px 18px;font-weight:700;font-size:16px;color:var(--rbx-text);
     display:flex;align-items:center;gap:9px;
   }
   .card-body{padding:20px 18px;}
@@ -88,17 +120,21 @@
   }
   .thumb{
     width:200px;height:200px;flex:0 0 200px;border-radius:8px;
-    background:
-      radial-gradient(circle at 30% 25%, #3a4658 0%, #1f2937 70%);
-    border:1px solid #0d1420;
+    background:var(--graph-bg);
+    border:1px solid var(--rbx-line);
     position:relative;overflow:hidden;
     display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
   }
-  .thumb .equ{display:flex;gap:5px;align-items:flex-end;height:90px;}
-  .thumb .equ i{
-    width:9px;background:linear-gradient(var(--rbx-green),#7CFF3F);
-    border-radius:2px 2px 0 0;height:20%;
-    box-shadow:0 0 6px rgba(124,255,63,.4);
+  .thumb canvas#spectrum{
+    position:absolute;inset:0;width:100%;height:100%;display:block;
+  }
+  .thumb .thumb-db{
+    position:absolute;bottom:8px;right:9px;
+    font-size:12px;font-weight:800;color:var(--graph-ink);
+    font-variant-numeric:tabular-nums;
+    opacity:.85;
+    letter-spacing:.3px;
   }
   .thumb .badge{
     position:absolute;top:8px;left:8px;background:var(--rbx-red);
@@ -112,26 +148,18 @@
   .info .by{color:var(--rbx-sub);font-size:14px;font-weight:600;margin-bottom:14px;}
   .info .by b{color:var(--rbx-accent);}
 
-  /* ---------- dB meter as a roblox-style bar ---------- */
+  /* ---------- waveform (output level as oscilloscope) ---------- */
   .meter-label{
     display:flex;justify-content:space-between;align-items:baseline;
     font-size:12px;font-weight:700;color:var(--rbx-sub);
     text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;
   }
   .meter-label .val{color:var(--rbx-green-d);font-size:13px;font-variant-numeric:tabular-nums;}
-  .meter-track{
-    height:22px;background:#dfe3e8;border:1px solid #b9c0c8;border-radius:5px;
-    overflow:hidden;position:relative;
+  .wave-track{
+    height:80px;background:var(--graph-bg);border:1px solid var(--rbx-line);border-radius:5px;
+    overflow:hidden;position:relative;transition:background .2s;
   }
-  .meter-fill{
-    height:100%;width:0%;
-    background:linear-gradient(90deg,var(--rbx-green) 0%,var(--rbx-green) 60%,var(--rbx-gold) 80%,var(--rbx-red) 100%);
-    background-size:166.66% 100%;background-position:left;
-    transition:width .05s linear;
-  }
-  .meter-ticks{position:absolute;inset:0;display:flex;}
-  .meter-ticks i{flex:1;border-right:1px solid rgba(255,255,255,.45);}
-  .meter-ticks i:last-child{border:none;}
+  .wave-track canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 
   /* ---------- buttons ---------- */
   .controls{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
@@ -170,7 +198,7 @@
 
   .status{
     margin-top:16px;font-size:13px;color:var(--rbx-sub);font-weight:600;
-    background:#f5f6f8;border:1px solid #e3e6ea;border-radius:5px;padding:9px 12px;
+    background:var(--status-bg);border:1px solid var(--status-line);border-radius:5px;padding:9px 12px;
   }
   .status b{color:var(--rbx-green-d);}
   .status.err b{color:var(--rbx-red);}
@@ -178,11 +206,11 @@
   /* ---------- about strip ---------- */
   .meta{display:flex;gap:0;flex-wrap:wrap;}
   .meta .cell{
-    flex:1 1 33%;padding:12px 10px;text-align:center;border-right:1px solid #eee;
+    flex:1 1 33%;padding:12px 10px;text-align:center;border-right:1px solid var(--meta-line);
   }
   .meta .cell:last-child{border:none;}
   .meta .k{font-size:11px;font-weight:700;color:var(--rbx-sub);text-transform:uppercase;letter-spacing:.5px;}
-  .meta .v{font-size:18px;font-weight:800;color:#3b3b3b;margin-top:2px;}
+  .meta .v{font-size:18px;font-weight:800;color:var(--rbx-text);margin-top:2px;}
 
   .foot{text-align:center;color:#9a9a9a;font-size:12px;font-weight:600;margin:24px 0 40px;}
   .foot span{color:var(--rbx-red);}
@@ -226,6 +254,7 @@
   <div class="topbar">
     <div class="logo">Ebi<span>net</span>wrk</div>
     <div class="tag">Radio</div>
+    <button class="theme-btn" id="themebtn" onclick="toggleTheme()">🌙 Dark</button>
     <div class="live"><span class="dot off" id="livedot"></span><span id="livetxt">OFFLINE</span></div>
   </div>
 
@@ -238,19 +267,17 @@
         <div class="stage">
           <div class="thumb">
             <span class="badge">LIVE</span>
-            <div class="equ" id="equ">
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            </div>
+            <canvas id="spectrum" width="360" height="200"></canvas>
+            <span class="thumb-db" id="thumbdb">-&infin; dB</span>
           </div>
           <div class="info">
             <h1>DJ Set Stream</h1>
             <div class="by">by <b>Ebinetwrk</b> · streamed live from the basement</div>
 
-            <!-- dB meter as roblox bar -->
-            <div class="meter-label"><span>Output Level</span><span class="val" id="dbreadout">-&infin; dB</span></div>
-            <div class="meter-track">
-              <div class="meter-fill" id="meterfill"></div>
-              <div class="meter-ticks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <!-- live waveform of the incoming audio -->
+            <div class="meter-label"><span>Waveform</span><span class="val" id="dbreadout">-&infin; dB</span></div>
+            <div class="wave-track">
+              <canvas id="wave" width="900" height="80"></canvas>
             </div>
 
             <div class="controls">
@@ -316,11 +343,24 @@
     }
   }
 
+  /* ---- theme toggle ---- */
+  function toggleTheme(){
+    var dark = document.body.classList.toggle("dark");
+    document.getElementById("themebtn").innerHTML = dark ? "&#9728;&#65039; Light" : "&#127769; Dark";
+  }
+
   /* ---- player + meter ---- */
-  var audio=null, ctx=null, analyser=null, data=null;
-  var fill=document.getElementById("meterfill");
+  var audio=null, ctx=null, analyser=null, timeData=null, freqData=null;
   var dbReadout=document.getElementById("dbreadout");
-  var equBars=document.querySelectorAll("#equ i");
+  var thumbDb=document.getElementById("thumbdb");
+
+  // spectrum canvas
+  var spec=document.getElementById("spectrum"), sctx=spec.getContext("2d");
+  // waveform canvas
+  var wave=document.getElementById("wave"), wctx=wave.getContext("2d");
+
+  var BARS=32;            // bass -> high
+  var NOISE_FLOOR=-55;    // dB; anything quieter reads as silence (kills phantom bars)
 
   function setStatus(msg, isErr){
     var s=document.getElementById("status");
@@ -345,8 +385,13 @@
       ctx=new (window.AudioContext||window.webkitAudioContext)();
       var src=ctx.createMediaElementSource(audio);
       analyser=ctx.createAnalyser();
-      analyser.fftSize=1024;
-      data=new Uint8Array(analyser.fftSize);
+      analyser.fftSize=2048;
+      // tighten the floor so silence is truly 0 (fixes phantom sub -55dB activity)
+      analyser.minDecibels=NOISE_FLOOR;
+      analyser.maxDecibels=-10;
+      analyser.smoothingTimeConstant=0.8;
+      timeData=new Uint8Array(analyser.fftSize);
+      freqData=new Uint8Array(analyser.frequencyBinCount);
       src.connect(analyser);
       analyser.connect(ctx.destination);
     }catch(e){ /* meter unavailable, audio still plays */ }
@@ -378,22 +423,88 @@
 
   function draw(){
     requestAnimationFrame(draw);
-    var db=-Infinity, pct=0;
-    if(analyser){
-      analyser.getByteTimeDomainData(data);
+
+    var db=-Infinity;
+    var hasAnalyser = !!analyser;
+    var playing = audio && !audio.paused;
+
+    if(hasAnalyser){
+      analyser.getByteTimeDomainData(timeData);
+      analyser.getByteFrequencyData(freqData);
+
+      // overall level (RMS) -> dB, gated by the noise floor
       var sum=0;
-      for(var i=0;i<data.length;i++){var s=(data[i]-128)/128;sum+=s*s;}
-      var rms=Math.sqrt(sum/data.length);
+      for(var i=0;i<timeData.length;i++){var s=(timeData[i]-128)/128;sum+=s*s;}
+      var rms=Math.sqrt(sum/timeData.length);
       db = rms>0 ? 20*Math.log10(rms) : -Infinity;
-      pct = Math.max(0,Math.min(1,(db+60)/60));
+      if(db < NOISE_FLOOR) db = -Infinity;   // below floor = treat as silence
     }
-    dbReadout.innerHTML = (db===-Infinity?"-&infin;":db.toFixed(1)) + " dB";
-    fill.style.width = (pct*100).toFixed(1)+"%";
-    // equalizer bars in the thumbnail react too
-    for(var b=0;b<equBars.length;b++){
-      var jitter = pct>0 ? (pct*100*(0.4+Math.random()*0.6)) : 18;
-      equBars[b].style.height = Math.max(12,Math.min(100,jitter))+"%";
+
+    var dbText = (db===-Infinity ? "-&infin;" : db.toFixed(1)) + " dB";
+    dbReadout.innerHTML = dbText;
+    thumbDb.innerHTML = dbText;
+
+    drawSpectrum(playing && hasAnalyser);
+    drawWave(playing && hasAnalyser);
+  }
+
+  function graphInk(){
+    return getComputedStyle(document.body).getPropertyValue('--graph-ink').trim() || '#ffffff';
+  }
+
+  function drawSpectrum(active){
+    var W=spec.width, H=spec.height;
+    sctx.clearRect(0,0,W,H);
+    if(!active){ return; }   // nothing drawn when idle -> no phantom bars
+
+    var ink=graphInk();
+    var bins=freqData.length;          // 1024 bins
+    var gap=3;
+    var bw=(W-(BARS+1)*gap)/BARS;
+
+    sctx.fillStyle=ink;
+    // log-spaced mapping so bars run bass -> high evenly
+    for(var b=0;b<BARS;b++){
+      var f0=Math.floor(Math.pow(bins, b/BARS));
+      var f1=Math.floor(Math.pow(bins,(b+1)/BARS));
+      if(f1<=f0) f1=f0+1;
+      var peak=0;
+      for(var k=f0;k<f1 && k<bins;k++){ if(freqData[k]>peak) peak=freqData[k]; }
+      var v=peak/255;                  // 0..1, already gated by minDecibels floor
+      if(v<0.02) v=0;                  // hard-zero tiny residue
+
+      var bh=v*(H-8);
+      var x=gap + b*(bw+gap);
+      var y=H-bh;
+      sctx.fillRect(x,y,bw,bh);
     }
+  }
+
+  function drawWave(active){
+    var W=wave.width, H=wave.height, mid=H/2;
+    wctx.clearRect(0,0,W,H);
+    var ink=graphInk();
+
+    // center line (faint)
+    wctx.strokeStyle=ink;
+    wctx.globalAlpha=0.18;
+    wctx.lineWidth=1;
+    wctx.beginPath(); wctx.moveTo(0,mid); wctx.lineTo(W,mid); wctx.stroke();
+    wctx.globalAlpha=1;
+
+    if(!active){ return; }
+
+    wctx.lineWidth=2;
+    wctx.strokeStyle=ink;
+    wctx.beginPath();
+    var n=timeData.length;
+    var step=W/n;
+    for(var i=0;i<n;i++){
+      var v=(timeData[i]-128)/128;     // -1..1
+      var y=mid + v*(mid-4);
+      if(i===0) wctx.moveTo(0,y); else wctx.lineTo(i*step,y);
+    }
+    wctx.stroke();
   }
 </script>
 </body>
