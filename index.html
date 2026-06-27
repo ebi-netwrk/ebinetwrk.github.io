@@ -61,7 +61,6 @@
     background:var(--header);border-bottom:1px solid var(--border);
     height:56px;display:flex;align-items:center;padding:0 18px;gap:12px;
   }
-  .topbar .mark{width:28px;height:28px;flex:0 0 28px;color:var(--text);}
   .topbar .logo{font-weight:700;font-size:16px;color:var(--text);letter-spacing:-.2px;}
   .topbar .slash{color:var(--text-muted);font-weight:400;margin:0 2px;}
   .topbar .repo{color:var(--link);font-weight:600;}
@@ -284,10 +283,13 @@
   var STREAM_URL  = "https://radio.friedchuhai.xyz/stream";
   var ACCESS_CODE = "letmein";
 
-  // past sessions: files named 1,2,3,... in this folder, oldest=1 newest=highest
+  // past sessions live in this folder, named:  DD-MM-YYYY_setname.<ext>
+  // e.g.  12-03-2026_basement set.mp3
+  // Because GitHub Pages can't list a folder to JS, list your files in
+  //   previoussessions/sessions.json   ->  ["12-03-2026_basement set", "20-04-2026_rooftop b2b", ...]
+  // (filenames WITHOUT the extension). The page parses date + name and sorts newest-first.
   var SESSION_DIR = "previoussessions";
-  var SESSION_EXT = "mp3";   // <-- change to your file extension: mp3 / m4a / aac / ogg / wav
-  var SESSION_MAX = 99;      // highest number to probe for
+  var SESSION_EXT = "mp3";   // <-- change to m4a / aac / ogg / wav to match your files
   /* ========================================================= */
 
   /* ---- gate ---- */
@@ -374,19 +376,20 @@
     setStatus("Connecting…");
   }
 
-  function playSession(n,row){
+  function playSession(it,row){
     setupAudio();
     mode="session";
     if(ctx&&ctx.state==="suspended") ctx.resume();
     setLive(false);
     clearActiveRows();
     if(row) row.classList.add("active");
-    document.getElementById("trackTitle").textContent="Session #"+n;
-    document.getElementById("trackBy").innerHTML="recorded set · <b>previoussessions/"+n+"."+SESSION_EXT+"</b>";
+    document.getElementById("trackTitle").textContent=it.name;
+    document.getElementById("trackBy").innerHTML="recorded set · <b>"+it.dateLabel+"</b>";
     document.getElementById("seek").className="seek show";
-    audio.src=SESSION_DIR+"/"+n+"."+SESSION_EXT; audio.load();
+    var url=SESSION_DIR+"/"+encodeURIComponent(it.stem+"."+SESSION_EXT);
+    audio.src=url; audio.load();
     audio.play().catch(function(){ setStatus("Browser blocked playback — press the session again.",true); });
-    setStatus("Loading session #"+n+"…");
+    setStatus("Loading “"+it.name+"”…");
   }
 
   function stopAll(){
@@ -415,37 +418,54 @@
   /* ---- session discovery ---- */
   function clearActiveRows(){ var r=document.querySelectorAll(".session.active"); for(var i=0;i<r.length;i++) r[i].classList.remove("active"); }
 
+  /* ---- parse "DD-MM-YYYY_setname" ---- */
+  var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function parseSession(stem){
+    var idx=stem.indexOf("_");
+    var datePart = idx>=0 ? stem.slice(0,idx) : stem;
+    var namePart = idx>=0 ? stem.slice(idx+1) : "(untitled)";
+    var d=datePart.split("-");           // [DD, MM, YYYY]
+    var day=parseInt(d[0],10), mon=parseInt(d[1],10), yr=parseInt(d[2],10);
+    var date = (day&&mon&&yr) ? new Date(yr,mon-1,day) : null;
+    var pretty = date ? (day+" "+MONTHS[mon-1]+" "+yr) : datePart;
+    return {
+      stem:stem,                          // raw, used to build the file URL
+      name:namePart.replace(/_/g," "),    // prettified set name for display
+      date:date,
+      dateLabel:pretty,
+      sortKey: date ? date.getTime() : 0
+    };
+  }
+
+  /* ---- load sessions from manifest ---- */
   function loadSessions(){
     var listEl=document.getElementById("sessionlist");
-    var checks=[];
-    for(var i=1;i<=SESSION_MAX;i++){
-      (function(n){
-        var url=SESSION_DIR+"/"+n+"."+SESSION_EXT;
-        checks.push(fetch(url,{method:"HEAD"}).then(function(r){return r.ok?n:null;}).catch(function(){return null;}));
-      })(i);
-    }
-    Promise.all(checks).then(function(res){
-      var found=res.filter(function(n){return n!==null;});
-      found.sort(function(a,b){return b-a;}); // newest first
-      document.getElementById("sessioncount").textContent=found.length;
-      if(found.length===0){
-        listEl.innerHTML="<div class='session-empty'>No sessions found in <code>"+SESSION_DIR+"/</code>. "+
-          "Files should be named <code>1."+SESSION_EXT+"</code>, <code>2."+SESSION_EXT+"</code>, … and "+
-          "<code>SESSION_EXT</code> must match your file type.</div>";
-        return;
-      }
-      listEl.innerHTML="";
-      found.forEach(function(n){
-        var row=document.createElement("div");
-        row.className="session";
-        row.innerHTML="<div class='play-ico'><span class='t'></span></div>"+
-                      "<div class='name'>Session <span class='hash'>#</span>"+n+"</div>"+
-                      "<div class='meta-r'>"+n+"."+SESSION_EXT+"</div>";
-        row.onclick=function(){ playSession(n,row); };
-        listEl.appendChild(row);
+    fetch(SESSION_DIR+"/sessions.json",{cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw new Error("no manifest"); return r.json(); })
+      .then(function(arr){
+        if(!Array.isArray(arr)||arr.length===0){ throw new Error("empty"); }
+        var items=arr.map(parseSession).sort(function(a,b){ return b.sortKey-a.sortKey; }); // newest first
+        document.getElementById("sessioncount").textContent=items.length;
+        listEl.innerHTML="";
+        items.forEach(function(it){
+          var row=document.createElement("div");
+          row.className="session";
+          row.innerHTML="<div class='play-ico'><span class='t'></span></div>"+
+                        "<div class='name'>"+escapeHtml(it.name)+"</div>"+
+                        "<div class='meta-r'>"+it.dateLabel+"</div>";
+          row.onclick=function(){ playSession(it,row); };
+          listEl.appendChild(row);
+        });
+      })
+      .catch(function(){
+        document.getElementById("sessioncount").textContent="0";
+        listEl.innerHTML="<div class='session-empty'>Couldn't read <code>"+SESSION_DIR+"/sessions.json</code>. "+
+          "Create it as a JSON array of filenames (without extension), e.g.<br><br>"+
+          "<code>[\"12-03-2026_basement set\", \"20-04-2026_rooftop b2b\"]</code></div>";
       });
-    });
   }
+
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
   /* ---- visualizer ---- */
   function graphInk(){ return getComputedStyle(document.body).getPropertyValue('--graph-ink').trim()||'#3fb950'; }
